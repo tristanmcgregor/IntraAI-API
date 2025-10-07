@@ -6,6 +6,7 @@ from typing import List
 from uuid import uuid4
 
 import boto3
+from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 
 from .config import Settings
@@ -32,10 +33,16 @@ class StorageService:
         if not self.settings.s3_bucket_name:
             raise StorageError("S3 bucket not configured")
         if self._client is None:
-            self._client = boto3.client(
+            session = boto3.session.Session()
+            config_kwargs = {"signature_version": "s3v4"}
+            if self.settings.s3_force_path_style:
+                config_kwargs["s3"] = {"addressing_style": "path"}
+            self._client = session.client(
                 "s3",
                 region_name=self.settings.aws_region,
                 endpoint_url=self.settings.s3_endpoint_url,
+                use_ssl=self.settings.s3_use_ssl,
+                config=Config(**config_kwargs),
             )
         return self._client
 

@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 
 from .config import Settings
 
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+_pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 def _settings() -> Settings:
@@ -26,7 +26,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(data: Dict[str, Any]) -> str:
     to_encode = data.copy()
     settings = _settings()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_exp_minutes)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_access_exp_minutes)
     to_encode.update({"exp": expire, "type": "access"})
     return jwt.encode(to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
@@ -34,7 +34,7 @@ def create_access_token(data: Dict[str, Any]) -> str:
 def create_refresh_token(data: Dict[str, Any]) -> str:
     to_encode = data.copy()
     settings = _settings()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.refresh_token_exp_minutes)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_refresh_exp_minutes)
     to_encode.update({"exp": expire, "type": "refresh"})
     return jwt.encode(to_encode, settings.jwt_secret, algorithm=settings.jwt_algorithm)
 
